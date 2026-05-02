@@ -1,0 +1,36 @@
+[project]
+name = "niji-pipeline"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "accelerate>=1.13.0",
+    "anthropic>=0.97.0",
+    "diffusers-anima",
+    "einops",
+    "peft>=0.18.0",
+    "pillow>=12.2.0",
+    "playwright>=1.59.0",
+    "pyyaml>=6.0.3",
+    "safetensors>=0.7.0",
+    "sentencepiece",
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "transformers>=4.51.0",
+]
+
+[tool.uv.sources]
+diffusers-anima = { git = "https://github.com/hdae/diffusers-anima.git" }
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.12",
+]
+
+[tool.uv]
+# macOS (MPS) では PyPI の torch を使う。diffusers-anima が CUDA インデックスを強制するため override が必要
+override-dependencies = [
+    "torch>=2.8.0 ; sys_platform == 'darwin'",
+    "torchvision>=0.23.0 ; sys_platform == 'darwin'",
+]
