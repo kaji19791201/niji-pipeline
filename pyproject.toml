@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "accelerate>=1.13.0",
-    "anthropic>=0.97.0",
     "diffusers-anima",
     "einops",
     "peft>=0.18.0",
@@ -25,8 +24,12 @@ diffusers-anima = { git = "https://github.com/hdae/diffusers-anima.git" }
 
 [dependency-groups]
 dev = [
+    "pytest>=9.0.3",
     "ruff>=0.15.12",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
 
 [tool.uv]
 # macOS (MPS) では PyPI の torch を使う。diffusers-anima が CUDA インデックスを強制するため override が必要
