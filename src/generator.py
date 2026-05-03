@@ -48,8 +48,8 @@ def generate_image(
     result = pipe(
         prompt=positive,
         negative_prompt=_NEGATIVE,
-        height=896,
-        width=1152,
+        height=1152,
+        width=896,
         num_inference_steps=30,
         guidance_scale=5.5,
     )
