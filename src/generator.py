@@ -6,9 +6,12 @@ import diffusers.utils.peft_utils as _peft_utils
 from diffusers_anima import AnimaPipeline
 from PIL import Image
 
-# diffusers 0.37.1 bug: non-diffusers LoRA metadata (e.g. {'format': 'pt'}) is
-# passed as LoRA config, causing KeyError: 'rank_pattern'.
-# Patch the reference in diffusers.loaders.peft (where it's actually called).
+# NOTE: diffusers-anima のバグ（主因）+ diffusers 0.37.1 の防御不足（副因）によるワークアラウンド。
+# diffusers-anima は非diffusers形式LoRAを変換後、safetensorsの生メタデータ {'format': 'pt'} を
+# そのまま metadata= として下流に渡す。diffusers はこれをLoRA設定として使おうとし
+# _maybe_raise_error_for_ambiguous_keys が KeyError: 'rank_pattern' でクラッシュする。
+# 修正本来の場所: diffusers-anima の lora_state_dict() で非diffusers変換後は metadata=None にすべき。
+# upstream issue を上げたら削除可。
 _orig_create_lora_config = _peft_utils._create_lora_config
 _LORA_CONFIG_KEYS = {"r", "target_modules", "rank_pattern"}
 
