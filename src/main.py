@@ -1,4 +1,6 @@
 import argparse
+import json
+from dataclasses import asdict
 from pathlib import Path
 
 
@@ -38,6 +40,13 @@ def main():
         print("[planner] generating scenes...")
         scenes = plan_scenes(story, character)
         print(f"[planner] {len(scenes)} scenes")
+
+        scenes_path = out_dir / "scenes.json"
+        scenes_path.write_text(
+            json.dumps([asdict(s) for s in scenes], ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"[planner] saved: {scenes_path}")
 
         for i, scene in enumerate(scenes):
             print(f"\n--- scene {i+1} ---")
