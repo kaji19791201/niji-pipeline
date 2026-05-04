@@ -42,12 +42,12 @@ def _build_prompt(story: str, character: dict) -> str:
 ### tags field
 - Comma-separated English tags (e621/danbooru style, space-separated words within each tag)
 - Keep tags minimal — only what cannot be expressed in description
-- Always include: species tag (anthro/human/etc.), gender, count (1girl/1boy/duo/etc.)
-- For known fictional characters: use `character name, series name` tags
-  - Do NOT add body type tags (tall, slender, etc.) for known characters
-- For original/unnamed characters: add body type tags as needed
+- appearance_tags (listed per character in the character sheet) are the ONLY source of appearance descriptors.
+  Include ONLY the ones visible in this scene's composition. Do NOT invent values not listed.
+- Include a count tag (1girl, 2girls, 1boy, etc.) based on who appears in this scene.
+- base_tags are automatically prepended — do NOT repeat character name or series tags.
 - Include pose/framing tag if it is a fixed constraint (e.g. close-up, from above, full body)
-- Do NOT include: emotions, colors, backgrounds, lighting, atmosphere — put these in description instead
+- Do NOT include: species tags (human/anthro/etc.), body type tags not in appearance_tags, emotions, colors, backgrounds, lighting, atmosphere — put these in description instead
 - Do NOT include quality tags (masterpiece, best quality, etc.)
 
 ### description field
@@ -113,9 +113,11 @@ def plan_scenes(story: str, character: dict) -> list[Scene]:
     data = json.loads(result.stdout)
     scenes_data = data["structured_output"]["scenes"]
 
+    base_tags = character.get("base_tags", "")
+
     return [
         Scene(
-            tags=s["tags"].replace("_", " "),
+            tags=f"{base_tags}, {s['tags'].replace('_', ' ')}" if base_tags else s["tags"].replace("_", " "),
             description=s["description"],
             dialogue=s["dialogue"],
             position=s["position"],
