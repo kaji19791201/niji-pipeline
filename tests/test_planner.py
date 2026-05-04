@@ -3,15 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from planner import Scene, _build_prompt, _load_pose_tags, plan_scenes
-
-
-def test_load_pose_tags_returns_list():
-    tags = _load_pose_tags()
-    assert isinstance(tags, list)
-    assert len(tags) > 0
-    assert "standing" in tags
-    assert "sitting" in tags
+from planner import Scene, _build_prompt, plan_scenes
 
 
 def test_build_prompt_contains_story():
@@ -20,13 +12,21 @@ def test_build_prompt_contains_story():
     prompt = _build_prompt(story, character)
     assert story in prompt
     assert "Kitsune" in prompt
-    assert "standing" in prompt
+    assert "description" in prompt
+    assert "tags" in prompt
+
+
+def test_build_prompt_no_pose_dict():
+    story = "Test story."
+    character = {"name": "Test"}
+    prompt = _build_prompt(story, character)
+    assert "Pose Tag Dictionary" not in prompt
 
 
 def test_plan_scenes_parses_claude_output():
     mock_scenes = [
         {
-            "tags": "solo, fox girl, standing, autumn forest",
+            "tags": "solo, fox_girl, standing, autumn_forest",
             "description": "A fox girl stands among golden leaves.",
             "dialogue": "きれいな景色……",
             "position": {"top": "10%", "left": "5%"},

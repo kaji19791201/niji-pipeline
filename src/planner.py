@@ -1,29 +1,7 @@
-import csv
 import json
 import subprocess
 from dataclasses import dataclass
-from pathlib import Path
 import yaml
-
-TAGS_CSV = Path(__file__).parent.parent / "resources" / "anima_general_tags.csv"
-
-_POSE_KEYWORDS = {
-    "standing", "sitting", "lying", "pose", "crouch", "kneel", "walking",
-    "running", "jump", "squat", "lean", "all fours", "close-up", "upper body",
-    "full body", "from above", "from below", "from behind", "side view",
-    "front view", "portrait", "action pose", "flying", "on back", "spreading",
-    "spread eagle", "step pose", "begging pose",
-}
-
-
-def _load_pose_tags() -> list[str]:
-    tags = []
-    with open(TAGS_CSV, newline="") as f:
-        for row in csv.DictReader(f):
-            name = row["name"].strip()
-            if any(kw in name for kw in _POSE_KEYWORDS):
-                tags.append(name)
-    return tags
 
 
 _SCHEMA = {
@@ -56,26 +34,32 @@ _SCHEMA = {
 
 def _build_prompt(story: str, character: dict) -> str:
     char_yaml = yaml.dump(character, allow_unicode=True, default_flow_style=False)
-    pose_tags = _load_pose_tags()
-    pose_tags_str = ", ".join(pose_tags)
 
     return f"""You are a manga scene planner. Generate scenes for an illustrated manga page.
 
-## Prompt Generation Rules (Gem Rules)
+## Prompt Generation Rules
 
 ### tags field
-- Comma-separated English tags (e621/danbooru style)
-- Include character appearance tags from the character sheet (species, fur color, hair, eyes, clothing, etc.)
-- Include composition/pose tags from the pose tag dictionary
-- Add attribute tags relevant to the scene
+- Comma-separated English tags (e621/danbooru style, space-separated words within each tag)
+- Keep tags minimal — only what cannot be expressed in description
+- Always include: species tag (anthro/human/etc.), gender, count (1girl/1boy/duo/etc.)
+- For known fictional characters: use `character name, series name` tags
+  - Do NOT add body type tags (tall, slender, etc.) for known characters
+- For original/unnamed characters: add body type tags as needed
+- Include pose/framing tag if it is a fixed constraint (e.g. close-up, from above, full body)
+- Do NOT include: emotions, colors, backgrounds, lighting, atmosphere — put these in description instead
 - Do NOT include quality tags (masterpiece, best quality, etc.)
-- Remove tags for body parts outside the frame (e.g. if close-up, omit feet/legs)
-- Use tags from the provided pose tag dictionary when applicable
 
 ### description field
-- Natural English sentence(s) describing the scene
-- Cover: spatial composition, lighting, pose, expression, atmosphere
-- Be specific and detailed
+- Natural English prose (2-4 sentences). This is the primary driver of image quality.
+- Cover ALL of the following:
+  - Framing & composition: camera angle, distance, what is in/out of frame
+  - Lighting: direction, quality, color temperature (e.g. "soft afternoon sunlight from the left")
+  - Pose & gesture: body position, hand placement, weight distribution
+  - Expression & gaze: emotion, eye direction
+  - Atmosphere & mood: time of day, weather, emotional tone
+  - Background: setting, depth, what surrounds the character
+- Be specific. "She leans against a window" beats "she is by a window"
 
 ### dialogue field
 - Japanese dialogue for the character in this scene
@@ -92,9 +76,6 @@ def _build_prompt(story: str, character: dict) -> str:
 ```yaml
 {char_yaml}
 ```
-
-## Pose Tag Dictionary (use these for composition/pose tags)
-{pose_tags_str}
 
 ## Story
 {story}
@@ -134,7 +115,7 @@ def plan_scenes(story: str, character: dict) -> list[Scene]:
 
     return [
         Scene(
-            tags=s["tags"],
+            tags=s["tags"].replace("_", " "),
             description=s["description"],
             dialogue=s["dialogue"],
             position=s["position"],
