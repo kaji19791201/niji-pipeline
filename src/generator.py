@@ -1,8 +1,23 @@
 from pathlib import Path
 
 import torch
+import diffusers.loaders.peft as _diffusers_peft
+import diffusers.utils.peft_utils as _peft_utils
 from diffusers_anima import AnimaPipeline
 from PIL import Image
+
+# diffusers 0.37.1 bug: non-diffusers LoRA metadata (e.g. {'format': 'pt'}) is
+# passed as LoRA config, causing KeyError: 'rank_pattern'.
+# Patch the reference in diffusers.loaders.peft (where it's actually called).
+_orig_create_lora_config = _peft_utils._create_lora_config
+_LORA_CONFIG_KEYS = {"r", "target_modules", "rank_pattern"}
+
+def _patched_create_lora_config(state_dict, network_alphas, metadata, *args, **kwargs):
+    if metadata is not None and not _LORA_CONFIG_KEYS.intersection(metadata):
+        metadata = None
+    return _orig_create_lora_config(state_dict, network_alphas, metadata, *args, **kwargs)
+
+_diffusers_peft._create_lora_config = _patched_create_lora_config
 
 MODEL_PATH = Path(
     "/Users/shingo/Documents/devel/kaji/_regacy/ComfyUI/models"
