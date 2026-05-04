@@ -9,6 +9,11 @@ MODEL_PATH = Path(
     "/diffusion_models/animayume_v04.safetensors"
 )
 
+LORA_PATH = Path(
+    "/Users/shingo/Documents/devel/kaji/_resource/loras/anima"
+    "/anima-turbo-lora-v0.1.safetensors"
+)
+
 _POSITIVE_PREFIX = (
     "masterpiece,best quality,highres,absurdrres,"
     "score_7,score_8,score_9,{rating},"
@@ -35,6 +40,7 @@ def _get_pipe() -> AnimaPipeline:
             dtype="bfloat16",
         )
         _pipe.scheduler.set_sampling_config(sampler="euler_a_rf", sigma_schedule="simple")
+        _pipe.load_lora_weights(str(LORA_PATH))
     return _pipe
 
 
@@ -50,8 +56,8 @@ def generate_image(
         negative_prompt=_NEGATIVE,
         height=1152,
         width=896,
-        num_inference_steps=30,
-        guidance_scale=5.5,
+        num_inference_steps=10,
+        guidance_scale=1.0,
     )
     image = result.images[0]
     image.save(output_path)
