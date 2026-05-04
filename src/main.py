@@ -12,6 +12,7 @@ def main():
 
     if args.dry_run:
         from generator import generate_image
+        from renderer import render_dialogue
 
         out_dir = Path(args.output)
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -20,10 +21,13 @@ def main():
         print(f"[dry-run] generating: {scene_prompt}")
         image = generate_image(scene_prompt, out_path)
         print(f"[dry-run] saved: {out_path} ({image.size})")
+        render_dialogue(image, "テストセリフです。\nここに文字が入ります。", {"top": "10%", "left": "5%"}, out_path)
+        print(f"[dry-run] rendered: {out_path}")
     else:
         import yaml
         from planner import plan_scenes
         from generator import generate_image
+        from renderer import render_dialogue
 
         out_dir = Path(args.output)
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -45,6 +49,8 @@ def main():
             print(f"[generator] generating {out_path}...")
             image = generate_image(scene_prompt, out_path)
             print(f"[generator] saved: {out_path} ({image.size})")
+            render_dialogue(image, scene.dialogue, scene.position, out_path)
+            print(f"[renderer] rendered: {out_path}")
 
 
 if __name__ == "__main__":
