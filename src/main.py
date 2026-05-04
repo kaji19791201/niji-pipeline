@@ -21,7 +21,30 @@ def main():
         image = generate_image(scene_prompt, out_path)
         print(f"[dry-run] saved: {out_path} ({image.size})")
     else:
-        print(f"story={args.story}, char={args.char}, output={args.output}")
+        import yaml
+        from planner import plan_scenes
+        from generator import generate_image
+
+        out_dir = Path(args.output)
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        story = Path(args.story).read_text()
+        character = yaml.safe_load(Path(args.char).read_text())
+
+        print("[planner] generating scenes...")
+        scenes = plan_scenes(story, character)
+        print(f"[planner] {len(scenes)} scenes")
+
+        for i, scene in enumerate(scenes):
+            print(f"\n--- scene {i+1} ---")
+            print(f"  tags: {scene.tags}")
+            print(f"  description: {scene.description}")
+            print(f"  dialogue: {scene.dialogue}")
+            scene_prompt = f"{scene.tags}\n{scene.description}"
+            out_path = out_dir / f"scene_{i+1:02d}.png"
+            print(f"[generator] generating {out_path}...")
+            image = generate_image(scene_prompt, out_path)
+            print(f"[generator] saved: {out_path} ({image.size})")
 
 
 if __name__ == "__main__":
