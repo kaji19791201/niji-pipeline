@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 from dataclasses import dataclass
 import yaml
@@ -95,23 +96,42 @@ class Scene:
     position: dict  # {"top": "20%", "left": "8%"}
 
 
+def _call_claude(prompt: str) -> list[dict]:
+    result = subprocess.run(
+        ["claude", "-p", prompt,
+         "--output-format", "json",
+         "--json-schema", json.dumps(_SCHEMA)],
+        capture_output=True, text=True, check=True, timeout=120,
+    )
+    data = json.loads(result.stdout)
+    return data["structured_output"]["scenes"]
+
+
+def _call_gemini(prompt: str) -> list[dict]:
+    import google.genai as genai
+    from google.genai import types
+
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=_SCHEMA,
+        ),
+    )
+    data = json.loads(response.text)
+    return data["scenes"]
+
+
 def plan_scenes(story: str, character: dict) -> list[Scene]:
     prompt = _build_prompt(story, character)
 
-    result = subprocess.run(
-        [
-            "claude", "-p", prompt,
-            "--output-format", "json",
-            "--json-schema", json.dumps(_SCHEMA),
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
-        timeout=120,
-    )
-
-    data = json.loads(result.stdout)
-    scenes_data = data["structured_output"]["scenes"]
+    backend = os.environ.get("PLANNER_BACKEND", "claude")
+    if backend == "gemini":
+        scenes_data = _call_gemini(prompt)
+    else:
+        scenes_data = _call_claude(prompt)
 
     base_tags = character.get("base_tags", "")
 

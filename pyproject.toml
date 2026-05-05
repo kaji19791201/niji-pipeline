@@ -8,6 +8,7 @@ dependencies = [
     "accelerate>=1.13.0",
     "diffusers-anima",
     "einops",
+    "google-genai>=1.75.0",
     "peft>=0.18.0",
     "pillow>=12.2.0",
     "playwright>=1.59.0",
