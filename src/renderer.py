@@ -95,7 +95,7 @@ Return JSON only."""
     try:
         client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3-flash-preview",
             contents=[
                 types.Part.from_bytes(data=image_bytes, mime_type="image/png"),
                 prompt,
