@@ -15,17 +15,19 @@ _SCHEMA = {
                 "properties": {
                     "tags":        {"type": "string"},
                     "description": {"type": "string"},
-                    "dialogue":    {"type": "string"},
-                    "position": {
-                        "type": "object",
-                        "properties": {
-                            "top":  {"type": "string"},
-                            "left": {"type": "string"},
+                    "texts": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "text": {"type": "string"},
+                                "role": {"type": "string", "enum": ["dialogue", "sfx"]},
+                            },
+                            "required": ["text", "role"],
                         },
-                        "required": ["top", "left"],
                     },
                 },
-                "required": ["tags", "description", "dialogue", "position"],
+                "required": ["tags", "description", "texts"],
             },
         }
     },
@@ -62,16 +64,13 @@ def _build_prompt(story: str, character: dict) -> str:
   - Background: setting, depth, what surrounds the character
 - Be specific. "She leans against a window" beats "she is by a window"
 
-### dialogue field
-- Japanese dialogue for the character in this scene
-- Should match the mood and context
-- Keep it concise (1-3 sentences)
-
-### position field
-- Where to place the dialogue box on the image
-- top: percentage from top (e.g. "10%", "70%")
-- left: percentage from left (e.g. "5%", "60%")
-- Choose a position that avoids covering the character's face and key parts of the scene
+### texts field
+- Array of text elements to overlay on the image
+- Each element has:
+  - text: the actual string (Japanese)
+  - role: "dialogue" (main speech, 1-3 sentences, 1-2 elements) or "sfx" (sound effects, short katakana, 0-4 elements)
+- dialogue: Japanese speech matching the scene mood, concise
+- sfx: onomatopoeia representing sounds in the scene (e.g. ドクッ, ザワッ, トクッ)
 
 ## Character Sheet
 ```yaml
@@ -92,8 +91,7 @@ def _build_prompt(story: str, character: dict) -> str:
 class Scene:
     tags: str
     description: str
-    dialogue: str
-    position: dict  # {"top": "20%", "left": "8%"}
+    texts: list  # [{"text": str, "role": "dialogue"|"sfx"}]
 
 
 def _call_claude(prompt: str) -> list[dict]:
@@ -139,8 +137,7 @@ def plan_scenes(story: str, character: dict) -> list[Scene]:
         Scene(
             tags=f"{base_tags}, {s['tags'].replace('_', ' ')}" if base_tags else s["tags"].replace("_", " "),
             description=s["description"],
-            dialogue=s["dialogue"],
-            position=s["position"],
+            texts=s["texts"],
         )
         for s in scenes_data
     ]

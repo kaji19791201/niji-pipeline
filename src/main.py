@@ -14,7 +14,7 @@ def main():
 
     if args.dry_run:
         from generator import generate_image
-        from renderer import render_dialogue
+        from renderer import detect_placements, render_dialogue
 
         out_dir = Path(args.output)
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -23,13 +23,18 @@ def main():
         print(f"[dry-run] generating: {scene_prompt}")
         image = generate_image(scene_prompt, out_path)
         print(f"[dry-run] saved: {out_path} ({image.size})")
-        render_dialogue(image, "テストセリフです。\nここに文字が入ります。", {"top": "10%", "left": "5%"}, out_path)
+        texts = [
+            {"text": "テストセリフです。\nここに文字が入ります。", "role": "dialogue"},
+            {"text": "ドキッ", "role": "sfx"},
+        ]
+        placements = detect_placements(image, texts)
+        render_dialogue(image, placements, out_path)
         print(f"[dry-run] rendered: {out_path}")
     else:
         import yaml
         from planner import plan_scenes
         from generator import generate_image
-        from renderer import render_dialogue
+        from renderer import detect_placements, render_dialogue
 
         out_dir = Path(args.output)
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -52,13 +57,14 @@ def main():
             print(f"\n--- scene {i+1} ---")
             print(f"  tags: {scene.tags}")
             print(f"  description: {scene.description}")
-            print(f"  dialogue: {scene.dialogue}")
+            print(f"  texts: {scene.texts}")
             scene_prompt = f"{scene.tags}\n{scene.description}"
             out_path = out_dir / f"scene_{i+1:02d}.png"
             print(f"[generator] generating {out_path}...")
             image = generate_image(scene_prompt, out_path)
             print(f"[generator] saved: {out_path} ({image.size})")
-            render_dialogue(image, scene.dialogue, scene.position, out_path)
+            placements = detect_placements(image, scene.texts)
+            render_dialogue(image, placements, out_path)
             print(f"[renderer] rendered: {out_path}")
 
 

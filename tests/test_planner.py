@@ -22,13 +22,25 @@ def test_build_prompt_no_pose_dict():
     assert "Pose Tag Dictionary" not in prompt
 
 
+def test_build_prompt_has_texts_field():
+    story = "Test story."
+    character = {"name": "Test"}
+    prompt = _build_prompt(story, character)
+    assert "texts" in prompt
+    assert "dialogue" in prompt
+    assert "sfx" in prompt
+    assert "### position field" not in prompt
+
+
 def test_plan_scenes_parses_claude_output():
     mock_scenes = [
         {
             "tags": "solo, fox_girl, standing, autumn_forest",
             "description": "A fox girl stands among golden leaves.",
-            "dialogue": "きれいな景色……",
-            "position": {"top": "10%", "left": "5%"},
+            "texts": [
+                {"text": "きれいな景色……", "role": "dialogue"},
+                {"text": "ザワッ", "role": "sfx"},
+            ],
         }
     ]
     mock_stdout = json.dumps({"structured_output": {"scenes": mock_scenes}})
@@ -43,8 +55,12 @@ def test_plan_scenes_parses_claude_output():
     s = scenes[0]
     assert isinstance(s, Scene)
     assert s.tags == "solo, fox girl, standing, autumn forest"
-    assert s.dialogue == "きれいな景色……"
-    assert s.position == {"top": "10%", "left": "5%"}
+    assert s.texts == [
+        {"text": "きれいな景色……", "role": "dialogue"},
+        {"text": "ザワッ", "role": "sfx"},
+    ]
+    assert not hasattr(s, "dialogue")
+    assert not hasattr(s, "position")
 
     call_args = mock_run.call_args
     cmd = call_args[0][0]
