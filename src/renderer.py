@@ -12,29 +12,15 @@ def _fallback_placements(image: Image.Image, texts: list[dict]) -> list[dict]:
     height = image.size[1]
     font_size = int(height * 0.04)
     result = []
-    dialogue_idx = 0
-    sfx_idx = 0
-    for t in texts:
-        if t["role"] == "dialogue":
-            result.append({
-                "text": t["text"],
-                "role": "dialogue",
-                "top": "10%",
-                "left": f"{5 + dialogue_idx * 20}%",
-                "font_size": font_size,
-                "rotation": 0,
-            })
-            dialogue_idx += 1
-        else:
-            result.append({
-                "text": t["text"],
-                "role": "sfx",
-                "top": f"{65 + sfx_idx * 10}%",
-                "left": f"{60 + sfx_idx * 5}%",
-                "font_size": int(font_size * 1.3),
-                "rotation": 15 * (1 if sfx_idx % 2 == 0 else -1),
-            })
-            sfx_idx += 1
+    for idx, t in enumerate(texts):
+        result.append({
+            "text": t["text"],
+            "role": "dialogue",
+            "top": "10%",
+            "left": f"{5 + idx * 20}%",
+            "font_size": font_size,
+            "rotation": 0,
+        })
     return result
 
 
@@ -61,11 +47,10 @@ For each element assign:
 - top: "N%" from top (0-95)
 - left: "N%" from left (0-90)
 - font_size: integer pixels ({font_min}-{font_max})
-- rotation: integer degrees (dialogue=0, sfx=±10 to ±30)
+- rotation: integer degrees (dialogue=0)
 
 Placement rules:
 - dialogue: place in dark/empty background areas (left or right edges), avoid character face
-- sfx: scatter near character with rotation, overlapping character is acceptable
 - Elements should not heavily overlap each other
 
 Return JSON only."""
@@ -181,13 +166,6 @@ def render_dialogue(image: Image.Image, placements: list[dict], output_path: Pat
   .dialogue {{
     writing-mode: vertical-rl;
     text-orientation: upright;
-  }}
-  .sfx {{
-    writing-mode: horizontal-tb;
-    font-weight: bold;
-    font-style: italic;
-    font-family: 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
-    transform: rotate(var(--rot, 0deg));
   }}
 </style>
 </head><body>

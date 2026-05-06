@@ -28,7 +28,7 @@ def test_build_prompt_has_texts_field():
     prompt = _build_prompt(story, character)
     assert "texts" in prompt
     assert "dialogue" in prompt
-    assert "sfx" in prompt
+    assert "sfx" not in prompt
     assert "### position field" not in prompt
 
 

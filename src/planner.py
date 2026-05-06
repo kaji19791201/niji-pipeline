@@ -21,7 +21,7 @@ _SCHEMA = {
                             "type": "object",
                             "properties": {
                                 "text": {"type": "string"},
-                                "role": {"type": "string", "enum": ["dialogue", "sfx"]},
+                                "role": {"type": "string", "enum": ["dialogue"]},
                             },
                             "required": ["text", "role"],
                         },
@@ -68,9 +68,8 @@ def _build_prompt(story: str, character: dict) -> str:
 - Array of text elements to overlay on the image
 - Each element has:
   - text: the actual string (Japanese)
-  - role: "dialogue" (main speech, 1-3 sentences, 1-2 elements) or "sfx" (sound effects, short katakana, 0-4 elements)
+  - role: "dialogue" (main speech, 1-3 sentences, 1-2 elements)
 - dialogue: Japanese speech matching the scene mood, concise
-- sfx: onomatopoeia representing sounds in the scene (e.g. ドクッ, ザワッ, トクッ)
 
 ## Character Sheet
 ```yaml
@@ -91,7 +90,7 @@ def _build_prompt(story: str, character: dict) -> str:
 class Scene:
     tags: str
     description: str
-    texts: list  # [{"text": str, "role": "dialogue"|"sfx"}]
+    texts: list  # [{"text": str, "role": "dialogue"}]
 
 
 def _call_claude(prompt: str) -> list[dict]:

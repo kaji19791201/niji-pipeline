@@ -12,7 +12,6 @@ def make_image(width=512, height=512):
 def make_placements(font_size=20):
     return [
         {"text": "こんにちは", "role": "dialogue", "top": "10%", "left": "5%", "font_size": font_size, "rotation": 0},
-        {"text": "ドキッ", "role": "sfx", "top": "70%", "left": "65%", "font_size": int(font_size * 1.3), "rotation": 15},
     ]
 
 
@@ -77,16 +76,14 @@ def test_render_dialogue_html_contents(tmp_path):
     assert "10%" in html
     assert "5%" in html
     assert "writing-mode: vertical-rl" in html
-    assert "writing-mode: horizontal-tb" in html
     assert "こんにちは" in html
-    assert "ドキッ" in html
 
 
 def test_detect_placements_fallback_on_failure(tmp_path):
     image = make_image(width=512, height=512)
     texts = [
         {"text": "セリフA", "role": "dialogue"},
-        {"text": "バキッ", "role": "sfx"},
+        {"text": "セリフB", "role": "dialogue"},
     ]
 
     with patch("google.genai.Client") as mock_client_cls:
@@ -98,13 +95,11 @@ def test_detect_placements_fallback_on_failure(tmp_path):
         placements = detect_placements(image, texts)
 
     assert len(placements) == 2
-    dialogue = next(p for p in placements if p["role"] == "dialogue")
-    sfx = next(p for p in placements if p["role"] == "sfx")
-    assert dialogue["text"] == "セリフA"
-    assert sfx["text"] == "バキッ"
-    assert "top" in dialogue and "left" in dialogue
-    assert dialogue["rotation"] == 0
-    assert sfx["rotation"] != 0
+    assert all(p["role"] == "dialogue" for p in placements)
+    assert placements[0]["text"] == "セリフA"
+    assert placements[1]["text"] == "セリフB"
+    assert all("top" in p and "left" in p for p in placements)
+    assert all(p["rotation"] == 0 for p in placements)
 
 
 def test_detect_placements_clamps_values():
