@@ -38,10 +38,13 @@ _NEGATIVE = (
 )
 
 _pipe: AnimaPipeline | None = None
+_pipe_has_lora: bool | None = None
 
 
-def _get_pipe() -> AnimaPipeline:
-    global _pipe
+def _get_pipe(use_lora: bool = True) -> AnimaPipeline:
+    global _pipe, _pipe_has_lora
+    if _pipe_has_lora != use_lora:
+        _pipe = None
     if _pipe is None:
         _pipe = AnimaPipeline.from_single_file(
             str(MODEL_PATH),
@@ -49,7 +52,9 @@ def _get_pipe() -> AnimaPipeline:
             dtype="bfloat16",
         )
         _pipe.scheduler.set_sampling_config(sampler="euler_a_rf", sigma_schedule="simple")
-        _pipe.load_lora_weights(str(LORA_PATH))
+        if use_lora:
+            _pipe.load_lora_weights(str(LORA_PATH))
+        _pipe_has_lora = use_lora
     return _pipe
 
 
@@ -57,16 +62,21 @@ def generate_image(
     scene_prompt: str,
     output_path: Path,
     rating: str = "safe",
+    use_lora: bool = True,
 ) -> Image.Image:
-    pipe = _get_pipe()
+    pipe = _get_pipe(use_lora=use_lora)
     positive = _POSITIVE_PREFIX.format(rating=rating) + scene_prompt
+    if use_lora:
+        steps, cfg = 10, 1.0
+    else:
+        steps, cfg = 30, 4.5
     result = pipe(
         prompt=positive,
         negative_prompt=_NEGATIVE,
         height=1152,
         width=896,
-        num_inference_steps=10,
-        guidance_scale=1.0,
+        num_inference_steps=steps,
+        guidance_scale=cfg,
     )
     image = result.images[0]
     image.save(output_path)
