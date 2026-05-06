@@ -19,15 +19,9 @@ def _patched_create_lora_config(state_dict, network_alphas, metadata, *args, **k
 
 _diffusers_peft._create_lora_config = _patched_create_lora_config
 
-MODEL_PATH = Path(
-    "/Users/shingo/Documents/devel/kaji/_regacy/ComfyUI/models"
-    "/diffusion_models/animayume_v04.safetensors"
-)
-
-LORA_PATH = Path(
-    "/Users/shingo/Documents/devel/kaji/_resource/loras/anima"
-    "/anima-turbo-lora-v0.1.safetensors"
-)
+_BASE = Path(__file__).parent.parent
+MODEL_PATH = _BASE / "resources/models/animayume_v04.safetensors"
+LORA_PATH = _BASE / "resources/loras/anima-turbo-lora-v0.1.safetensors"
 
 _POSITIVE_PREFIX = (
     "masterpiece,best quality,highres,absurdrres,"

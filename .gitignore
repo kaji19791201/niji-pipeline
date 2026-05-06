@@ -6,3 +6,5 @@ __pycache__/
 output/
 # Playwright browsers
 /ms-playwright/
+resources/models/
+resources/loras/
