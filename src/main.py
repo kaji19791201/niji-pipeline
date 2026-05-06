@@ -18,11 +18,14 @@ def main():
 
         out_dir = Path(args.output)
         out_dir.mkdir(parents=True, exist_ok=True)
+        raw_dir = out_dir / "raw"
+        raw_dir.mkdir(exist_ok=True)
         scene_prompt = "1girl, solo, long hair, school uniform, looking at viewer, smile"
+        raw_path = raw_dir / "dry_run.png"
         out_path = out_dir / "dry_run.png"
         print(f"[dry-run] generating: {scene_prompt}")
-        image = generate_image(scene_prompt, out_path)
-        print(f"[dry-run] saved: {out_path} ({image.size})")
+        image = generate_image(scene_prompt, raw_path)
+        print(f"[dry-run] saved: {raw_path} ({image.size})")
         texts = [
             {"text": "テストセリフです。\nここに文字が入ります。", "role": "dialogue"},
             {"text": "ドキッ", "role": "sfx"},
@@ -38,6 +41,8 @@ def main():
 
         out_dir = Path(args.output)
         out_dir.mkdir(parents=True, exist_ok=True)
+        raw_dir = out_dir / "raw"
+        raw_dir.mkdir(exist_ok=True)
 
         story = Path(args.story).read_text()
         character = yaml.safe_load(Path(args.char).read_text())
@@ -59,10 +64,11 @@ def main():
             print(f"  description: {scene.description}")
             print(f"  texts: {scene.texts}")
             scene_prompt = f"{scene.tags}\n{scene.description}"
+            raw_path = raw_dir / f"scene_{i+1:02d}.png"
             out_path = out_dir / f"scene_{i+1:02d}.png"
-            print(f"[generator] generating {out_path}...")
-            image = generate_image(scene_prompt, out_path)
-            print(f"[generator] saved: {out_path} ({image.size})")
+            print(f"[generator] generating {raw_path}...")
+            image = generate_image(scene_prompt, raw_path)
+            print(f"[generator] saved: {raw_path} ({image.size})")
             placements = detect_placements(image, scene.texts)
             render_dialogue(image, placements, out_path)
             print(f"[renderer] rendered: {out_path}")
