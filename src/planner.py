@@ -124,7 +124,7 @@ def _call_gemini(prompt: str) -> list[dict]:
 def plan_scenes(story: str, character: dict) -> list[Scene]:
     prompt = _build_prompt(story, character)
 
-    backend = os.environ.get("PLANNER_BACKEND", "claude")
+    backend = os.environ.get("LLM_BACKEND", "gemini")
     if backend == "gemini":
         scenes_data = _call_gemini(prompt)
     else:

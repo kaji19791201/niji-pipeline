@@ -1,4 +1,5 @@
 import json
+import os
 from unittest.mock import MagicMock, patch
 
 
@@ -47,7 +48,8 @@ def test_plan_scenes_parses_claude_output():
     mock_result = MagicMock()
     mock_result.stdout = mock_stdout
 
-    with patch("planner.subprocess.run", return_value=mock_result) as mock_run:
+    with patch("planner.subprocess.run", return_value=mock_result) as mock_run, \
+         patch.dict(os.environ, {"LLM_BACKEND": "claude"}):
         scenes = plan_scenes("A fox girl walks in autumn.", {"name": "Kitsune"})
 
     assert len(scenes) == 1
