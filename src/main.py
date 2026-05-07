@@ -8,15 +8,37 @@ from schema import Scenario
 
 def main():
     parser = argparse.ArgumentParser(description="niji-pipeline")
-    parser.add_argument("--scenario", required=True, help="Path to scenario JSON (scenarios/*.json)")
+    parser.add_argument("--scenario", default=None, help="Path to scenario JSON (scenarios/*.json)")
+    parser.add_argument("--idea", default=None, help="One-line idea to auto-generate scenario")
     parser.add_argument("--output", default=None)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-lora", action="store_true")
     args = parser.parse_args()
     use_lora = not args.no_lora
 
-    scenario_path = Path(args.scenario)
-    scenario = Scenario.model_validate_json(scenario_path.read_text(encoding="utf-8"))
+    if args.idea is None and args.scenario is None:
+        parser.error("either --idea or --scenario is required")
+
+    if args.idea:
+        from ideator import generate_scenario
+        print(f"[ideator] generating scenario from idea: {args.idea}")
+        result = generate_scenario(args.idea)
+        scenarios_dir = Path("scenarios")
+        scenarios_dir.mkdir(parents=True, exist_ok=True)
+        scenario_path = scenarios_dir / f"{result.name}.json"
+        scenario = Scenario(
+            idea=args.idea,
+            character=result.character,
+            story=result.story,
+        )
+        scenario_path.write_text(
+            scenario.model_dump_json(indent=2, exclude_none=False),
+            encoding="utf-8",
+        )
+        print(f"[ideator] saved: {scenario_path}")
+    else:
+        scenario_path = Path(args.scenario)
+        scenario = Scenario.model_validate_json(scenario_path.read_text(encoding="utf-8"))
 
     out_dir = Path(args.output) if args.output else Path("output") / scenario_path.stem
     out_dir.mkdir(parents=True, exist_ok=True)
