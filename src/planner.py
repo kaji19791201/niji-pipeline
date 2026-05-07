@@ -117,6 +117,8 @@ def _call_gemini(prompt: str) -> list[dict]:
             response_schema=_SCHEMA,
         ),
     )
+    if response.text is None:
+        raise ValueError("Gemini returned empty response")
     data = json.loads(response.text)
     return data["scenes"]
 
@@ -125,10 +127,19 @@ def plan_scenes(story: str, character: dict) -> list[Scene]:
     prompt = _build_prompt(story, character)
 
     backend = os.environ.get("LLM_BACKEND", "gemini")
-    if backend == "gemini":
-        scenes_data = _call_gemini(prompt)
+    last_exc = None
+    for attempt in range(3):
+        try:
+            if backend == "gemini":
+                scenes_data = _call_gemini(prompt)
+            else:
+                scenes_data = _call_claude(prompt)
+            break
+        except Exception as e:
+            last_exc = e
+            print(f"[planner] attempt {attempt + 1} failed: {e}")
     else:
-        scenes_data = _call_claude(prompt)
+        raise RuntimeError(f"planner failed after 3 attempts: {last_exc}") from last_exc
 
     base_tags = character.get("base_tags", "")
 
