@@ -8,3 +8,4 @@ output/
 /ms-playwright/
 resources/models/
 resources/loras/
+scenarios/

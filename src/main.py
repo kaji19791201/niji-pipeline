@@ -6,20 +6,23 @@ from pathlib import Path
 
 def main():
     parser = argparse.ArgumentParser(description="niji-pipeline")
-    parser.add_argument("--story", required=True)
-    parser.add_argument("--char", required=True)
-    parser.add_argument("--output", default="output")
+    parser.add_argument("--scenario", required=True, help="Path to scenario JSON (scenarios/*.json)")
+    parser.add_argument("--output", default=None)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-lora", action="store_true")
     args = parser.parse_args()
     use_lora = not args.no_lora
 
+    scenario_path = Path(args.scenario)
+    scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
+
+    out_dir = Path(args.output) if args.output else Path("output") / scenario_path.stem
+    out_dir.mkdir(parents=True, exist_ok=True)
+
     if args.dry_run:
         from generator import generate_image
         from renderer import detect_placements, render_dialogue
 
-        out_dir = Path(args.output)
-        out_dir.mkdir(parents=True, exist_ok=True)
         raw_dir = out_dir / "raw"
         raw_dir.mkdir(exist_ok=True)
         scene_prompt = "1girl, solo, long hair, school uniform, looking at viewer, smile"
@@ -36,18 +39,15 @@ def main():
         render_dialogue(image, placements, out_path)
         print(f"[dry-run] rendered: {out_path}")
     else:
-        import yaml
         from planner import plan_scenes
         from generator import generate_image
         from renderer import detect_placements, render_dialogue
 
-        out_dir = Path(args.output)
-        out_dir.mkdir(parents=True, exist_ok=True)
         raw_dir = out_dir / "raw"
         raw_dir.mkdir(exist_ok=True)
 
-        story = Path(args.story).read_text()
-        character = yaml.safe_load(Path(args.char).read_text())
+        story = scenario["story"]
+        character = scenario["character"]
 
         print("[planner] generating scenes...")
         scenes = plan_scenes(story, character)
@@ -59,6 +59,12 @@ def main():
             encoding="utf-8",
         )
         print(f"[planner] saved: {scenes_path}")
+
+        scenario["scenes"] = [asdict(s) for s in scenes]
+        scenario_path.write_text(
+            json.dumps(scenario, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
 
         for i, scene in enumerate(scenes):
             print(f"\n--- scene {i+1} ---")
