@@ -12,6 +12,7 @@ dependencies = [
     "peft>=0.18.0",
     "pillow>=12.2.0",
     "playwright>=1.59.0",
+    "pydantic>=2.13.3",
     "pyyaml>=6.0.3",
     "safetensors>=0.7.0",
     "sentencepiece",

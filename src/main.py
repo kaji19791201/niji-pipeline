@@ -3,6 +3,8 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+from schema import Scenario
+
 
 def main():
     parser = argparse.ArgumentParser(description="niji-pipeline")
@@ -14,7 +16,7 @@ def main():
     use_lora = not args.no_lora
 
     scenario_path = Path(args.scenario)
-    scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
+    scenario = Scenario.model_validate_json(scenario_path.read_text(encoding="utf-8"))
 
     out_dir = Path(args.output) if args.output else Path("output") / scenario_path.stem
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -46,11 +48,8 @@ def main():
         raw_dir = out_dir / "raw"
         raw_dir.mkdir(exist_ok=True)
 
-        story = scenario["story"]
-        character = scenario["character"]
-
         print("[planner] generating scenes...")
-        scenes = plan_scenes(story, character)
+        scenes = plan_scenes(scenario.story, scenario.character.model_dump())
         print(f"[planner] {len(scenes)} scenes")
 
         scenes_path = out_dir / "scenes.json"
@@ -60,9 +59,9 @@ def main():
         )
         print(f"[planner] saved: {scenes_path}")
 
-        scenario["scenes"] = [asdict(s) for s in scenes]
+        scenario.scenes = [asdict(s) for s in scenes]
         scenario_path.write_text(
-            json.dumps(scenario, ensure_ascii=False, indent=2),
+            scenario.model_dump_json(indent=2, exclude_none=False),
             encoding="utf-8",
         )
 
