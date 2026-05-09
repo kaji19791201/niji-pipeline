@@ -13,6 +13,7 @@ def main():
     parser.add_argument("--output", default=None)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-lora", action="store_true")
+    parser.add_argument("--rating", choices=["safe", "sensitive", "nsfw", "explicit"], default="safe")
     args = parser.parse_args()
     use_lora = not args.no_lora
 
@@ -53,7 +54,7 @@ def main():
         raw_path = raw_dir / "dry_run.png"
         out_path = out_dir / "dry_run.png"
         print(f"[dry-run] generating: {scene_prompt}")
-        image = generate_image(scene_prompt, raw_path, use_lora=use_lora)
+        image = generate_image(scene_prompt, raw_path, use_lora=use_lora, rating=args.rating)
         print(f"[dry-run] saved: {raw_path} ({image.size})")
         texts = [
             {"text": "テストセリフです。\nここに文字が入ります。", "role": "dialogue"},
@@ -96,7 +97,7 @@ def main():
             raw_path = raw_dir / f"scene_{i+1:02d}.png"
             out_path = out_dir / f"scene_{i+1:02d}.png"
             print(f"[generator] generating {raw_path}...")
-            image = generate_image(scene_prompt, raw_path, use_lora=use_lora)
+            image = generate_image(scene_prompt, raw_path, use_lora=use_lora, rating=args.rating)
             print(f"[generator] saved: {raw_path} ({image.size})")
             placements = detect_placements(image, scene.texts)
             render_dialogue(image, placements, out_path)
