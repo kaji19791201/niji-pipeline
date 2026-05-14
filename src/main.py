@@ -58,7 +58,6 @@ def main():
         print(f"[dry-run] saved: {raw_path} ({image.size})")
         texts = [
             {"text": "テストセリフです。\nここに文字が入ります。", "role": "dialogue"},
-            {"text": "ドキッ", "role": "sfx"},
         ]
         placements = detect_placements(image, texts)
         render_dialogue(image, placements, out_path)
