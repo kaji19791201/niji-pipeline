@@ -91,7 +91,7 @@ def _call_gemini(prompt: str) -> dict:
 
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     response = client.models.generate_content(
-        model="gemini-3-flash-preview",
+        model=os.environ["GEMINI_MODEL"],
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
